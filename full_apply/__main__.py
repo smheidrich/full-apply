@@ -1,14 +1,11 @@
 #!/usr/bin/env python3
-from abc import ABC, abstractmethod
-from difflib import diff_bytes, unified_diff
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from sys import argv, stderr
 from typing import Sequence, Tuple
 
-from yachalk import chalk
-
-from .term import color_diff_line, prefix_lines
+from .change import Change, ContentChange, PathChange
+from .term import to_term_str
 
 cmd = argv[1]
 path = argv[2]
@@ -31,77 +28,6 @@ def run_replace_cmd(buf: bytes) -> Tuple[bytes, bytes]:
             stderr.buffer.write(e.stdout)
         exit(1)
     return r.stdout, r.stderr
-
-
-class Change(ABC):
-    replace_cmd_stderr: bytes
-
-    @abstractmethod
-    def apply(self):
-        ...
-
-
-class PathChange(Change):
-    def __init__(self, old: Path, new: Path, replace_cmd_stderr: bytes):
-        self.old = old
-        self.new = new
-        self.replace_cmd_stderr = replace_cmd_stderr
-
-    def apply(self):
-        self.old.rename(self.new)
-
-    def __str__(self):
-        s = (
-            chalk.bold.yellow("move")
-            + f"  {self.old} "
-            + chalk.bold("→")
-            + f" {self.new}"
-        )
-        if self.replace_cmd_stderr:
-            s += chalk.grey("\nnote: ") + "".join(
-                prefix_lines(
-                    self.replace_cmd_stderr.decode("utf-8"),
-                    "      ",
-                    first_line_prefix="",
-                )
-            )
-        return s.rstrip("\n")
-
-
-class ContentChange(Change):
-    def __init__(
-        self, path: Path, old: bytes, new: bytes, replace_cmd_stderr: bytes
-    ):
-        self.path = path
-        self.old = old
-        self.new = new
-        self.replace_cmd_stderr = replace_cmd_stderr
-
-    def apply(self):
-        self.path.write_bytes(self.new)
-
-    def __str__(self):
-        content_diff = diff_bytes(
-            unified_diff,
-            self.old.splitlines(keepends=True),
-            self.new.splitlines(keepends=True),
-            fromfile=b"old",
-            tofile=b"new",
-        )
-        s = chalk.bold.yellow("patch ") + f"{self.path}:\n"
-        next(content_diff)
-        next(content_diff)
-        for diff_line in content_diff:
-            s += "        " + color_diff_line(diff_line.decode("utf-8"))
-        if self.replace_cmd_stderr:
-            s += chalk.grey("note: ") + "".join(
-                prefix_lines(
-                    self.replace_cmd_stderr.decode("utf-8"),
-                    "      ",
-                    first_line_prefix="",
-                )
-            )
-        return s.rstrip("\n")
 
 
 def collect_changes_to_path_and_content(path: Path) -> Sequence[Change]:
@@ -140,4 +66,4 @@ def collect_changes_recur(path: Path):
 if __name__ == "__main__":
     changes = collect_changes_recur(Path(path))
     for change in changes:
-        print(change)
+        print(to_term_str(change))
