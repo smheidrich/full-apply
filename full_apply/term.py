@@ -93,6 +93,7 @@ def _(obj: ContentChange) -> str:
         tofile=b"new",
     )
     s = chalk.bold.yellow("patch ") + f"{obj.path}:\n"
+    # skip first 2 lines which are just +++ ---
     next(content_diff)
     next(content_diff)
     for diff_line in content_diff:

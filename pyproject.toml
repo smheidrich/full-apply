@@ -11,6 +11,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 yachalk = "^0.1.5"
+typer = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
