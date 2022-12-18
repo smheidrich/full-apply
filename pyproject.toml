@@ -8,6 +8,9 @@ packages = [
 ]
 readme = "README.md"
 
+[tool.poetry.scripts]
+full-apply = 'full_apply.__main__:cli_main'
+
 [tool.poetry.dependencies]
 python = "^3.10"
 yachalk = "^0.1.5"
