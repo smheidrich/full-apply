@@ -2,6 +2,14 @@
 
 Apply commands to both file contents and paths.
 
+## Installation
+
+```bash
+pip3 install https://gitlab.com/smheidrich/full-apply.git
+```
+
+## Usage
+
 ```console
 $ full-apply --help
 Usage: full-apply [OPTIONS] CMD PATHS...
@@ -29,4 +37,3 @@ Options:
                           [default: no-hidden]
   --help                  Show this message and exit.
 ```
-
