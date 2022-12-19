@@ -92,13 +92,30 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    cmd: str = typer.Argument(..., help="command that does the replacing"),
+    cmd: str = typer.Argument(..., help="shell command to apply"),
     paths: list[str] = typer.Argument(
         ..., help="paths to apply to (recursively)"
     ),
-    yes: bool = typer.Option(False, help="actually apply instead of dry-run"),
-    hidden: bool = typer.Option(False, help="whether to go through . files"),
+    yes: bool = typer.Option(
+        False, help="actually apply instead of performing a dry-run"
+    ),
+    hidden: bool = typer.Option(
+        False, help='whether to go through "hidden" (dot-prefixed) files'
+    ),
 ):
+    """
+    Apply commands to both file contents and paths.
+
+    File paths and contents will be piped into the given shell command's
+    standard input and replaced with its output.
+
+    Examples:
+
+    Replace all occurrences of "foo" with "bar" in both paths and file
+    contents within the current directory and sub-directories:
+
+      $ full-apply "sed s/foo/bar/g" .
+    """
     changes = collect_changes_recur(
         cmd, [Path(path) for path in paths], hidden
     )
