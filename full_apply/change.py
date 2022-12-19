@@ -16,15 +16,17 @@ class PathChange(Change):
         old: Path,
         new: Path,
         dest_exists: bool,
+        old_is_dir: bool,
         replace_cmd_stderr: bytes,
     ):
         self.old = old
         self.new = new
         self.dest_exists = dest_exists
+        self.old_is_dir = old_is_dir
         self.replace_cmd_stderr = replace_cmd_stderr
 
     def apply_to_fs(self, overwrite: bool = False):
-        if self.old.is_dir():
+        if self.old_is_dir or self.old.is_dir():
             print("directories not supported yet, skipping...")
             return
         # TODO use atomic rename-if-not-exists function instead to be safe

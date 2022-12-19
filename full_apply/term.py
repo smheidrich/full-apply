@@ -72,6 +72,8 @@ def _(obj: PathChange) -> str:
         + chalk.bold("→")
         + f" {obj.new}"
     )
+    if obj.old_is_dir:
+        s += chalk.red("\nattn:") + " will be ignored (dirs not yet supported)"
     if obj.replace_cmd_stderr:
         s += chalk.grey("\nnote: ") + "".join(
             prefix_lines(

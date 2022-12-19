@@ -54,7 +54,13 @@ def collect_changes_to_path_and_content(
     new_path = Path(new_path_str)
     if new_path_str != path_str:
         changes.append(
-            PathChange(path, new_path, new_path.exists(), replace_cmd_stderr)
+            PathChange(
+                path,
+                new_path,
+                new_path.exists(),
+                path.is_dir(),
+                replace_cmd_stderr,
+            )
         )
     return changes
 
