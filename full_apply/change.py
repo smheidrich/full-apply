@@ -32,6 +32,7 @@ class PathChange(Change):
         # TODO use atomic rename-if-not-exists function instead to be safe
         if (self.dest_exists and overwrite) or not self.new.exists():
             print(f"moving {self.old} → {self.new}")
+            self.new.parent.mkdir(exist_ok=True, parents=True)
             self.old.rename(self.new)
         else:
             msg = "file already exists"
