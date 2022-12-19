@@ -60,14 +60,24 @@ def collect_changes_to_path_and_content(
 
 
 def collect_changes_recur(
-    cmd: str, path: Path, hidden: bool = False
+    cmd: str, paths: Sequence[Path], hidden: bool = False, processed_paths=None
 ) -> Sequence[Change]:
-    if path.name.startswith(".") and not hidden:
-        return []
-    changes = collect_changes_to_path_and_content(cmd, path)
-    if path.is_dir():
-        for subpath in path.iterdir():
-            changes += collect_changes_recur(cmd, subpath, hidden)
+    # avoid processing paths twice:
+    if processed_paths is None:
+        processed_paths = set()
+    changes = []
+    for path in paths:
+        if path in processed_paths or (
+            path.name.startswith(".") and not hidden
+        ):
+            continue
+        changes += collect_changes_to_path_and_content(cmd, path)
+        if path.is_dir():
+            for subpath in path.iterdir():
+                changes += collect_changes_recur(
+                    cmd, [subpath], hidden, processed_paths
+                )
+        processed_paths.add(path)
     return changes
 
 
@@ -77,11 +87,15 @@ app = typer.Typer()
 @app.command()
 def main(
     cmd: str = typer.Argument(..., help="command that does the replacing"),
-    path: str = typer.Argument(".", help="path to apply to recursively"),
+    paths: list[str] = typer.Argument(
+        ..., help="paths to apply to (recursively)"
+    ),
     yes: bool = typer.Option(False, help="actually apply instead of dry-run"),
     hidden: bool = typer.Option(False, help="whether to go through . files"),
 ):
-    changes = collect_changes_recur(cmd, Path(path), hidden)
+    changes = collect_changes_recur(
+        cmd, [Path(path) for path in paths], hidden
+    )
     if not changes:
         print("no changes to be made")
         return
