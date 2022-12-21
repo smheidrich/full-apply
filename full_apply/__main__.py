@@ -2,7 +2,7 @@
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from sys import stderr
-from typing import Sequence, Tuple
+from typing import MutableSequence, Sequence, Tuple
 
 import typer
 
@@ -32,7 +32,7 @@ def run_replace_cmd(cmd: str, buf: bytes) -> Tuple[bytes, bytes]:
 def collect_changes_to_path_and_content(
     cmd: str, path: Path
 ) -> Sequence[Change]:
-    changes = []
+    changes: MutableSequence[Change] = []
     # apply to contents
     if path.is_file():
         content_bytes = path.read_bytes()
@@ -71,7 +71,7 @@ def collect_changes_recur(
     # avoid processing paths twice:
     if processed_paths is None:
         processed_paths = set()
-    changes = []
+    changes: MutableSequence[Change] = []
     for path in paths:
         if path in processed_paths or (
             path.name.startswith(".") and not hidden
