@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "full-apply"
-version = "0.1.0"
+version = "0.1.1"
 description = "Apply commands to both file contents and paths"
 authors = ["smheidrich <smheidrich@weltenfunktion.de>"]
 packages = [
