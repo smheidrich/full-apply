@@ -5,7 +5,7 @@ Apply commands to both file contents and paths.
 ## Installation
 
 ```bash
-pip3 install https://gitlab.com/smheidrich/full-apply.git
+pip3 install full-apply
 ```
 
 ## Usage
