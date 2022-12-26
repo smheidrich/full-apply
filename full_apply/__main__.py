@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+from os import isatty
 from pathlib import Path
 from subprocess import CalledProcessError, run
-from sys import stderr
+from sys import stderr, stdin
 from typing import MutableSequence, Sequence, Tuple
 
 import typer
+from yachalk import chalk
 
 from .change import Change, ContentChange, PathChange
 from .term import to_term_str
@@ -97,7 +99,10 @@ def main(
         ..., help="paths to apply to (recursively)"
     ),
     yes: bool = typer.Option(
-        False, help="actually apply instead of performing a dry-run"
+        False, help="apply changes without asking (dangerous!)"
+    ),
+    no: bool = typer.Option(
+        False, help="don't ask whether to apply changes, just don't apply them"
     ),
     hidden: bool = typer.Option(
         False, help='whether to go through "hidden" (dot-prefixed) files'
@@ -116,6 +121,8 @@ def main(
 
       $ full-apply "sed s/foo/bar/g" .
     """
+    if yes and no:
+        raise typer.BadParameter("can't use both --yes and --no")
     changes = collect_changes_recur(
         cmd, [Path(path) for path in paths], hidden
     )
@@ -127,8 +134,20 @@ def main(
         if yes:
             change.apply_to_fs()
     if not yes:
-        print("if you are happy with these changes, run with --yes to apply")
-    else:
+        if not isatty(stdin.fileno()) or no:
+            print(
+                "if you are happy with these changes, run with --yes "
+                "or in interactive mode to apply"
+            )
+        else:
+            apply_answer = input(chalk.bold("apply these changes (Y/[n])? "))
+            if apply_answer != "Y":
+                return
+            yes = True
+            for change in changes:
+                print(to_term_str(change))
+                change.apply_to_fs()
+    if yes:
         print("all done")
 
 
