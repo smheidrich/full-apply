@@ -3,7 +3,7 @@ from os import isatty
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from sys import stderr, stdin
-from typing import MutableSequence, Sequence, Tuple, cast
+from typing import Iterable, MutableSequence, Sequence, Tuple, cast
 
 import typer
 from yachalk import chalk
@@ -104,6 +104,20 @@ def collect_changes_recur(
     return changes
 
 
+def check_conflicts(changes: Sequence[Change]) -> Iterable[Path]:
+    lhss = set()
+    rhss = set()
+    for change in changes:
+        if isinstance(change, PathChange):
+            lhss.add(change.old)
+            rhss.add(change.new)
+        elif isinstance(change, ContentChange):
+            lhss.add(change.path)
+        else:
+            assert False, f"should never happen: {change} is not a Change obj"
+    return lhss.intersection(rhss)
+
+
 app = typer.Typer()
 
 
@@ -156,8 +170,16 @@ def main(
         return
     for change in changes:
         print(to_term_str(change))
-        if yes:
-            change.apply_to_fs()
+    conflict_paths = check_conflicts(changes)
+    if conflict_paths:
+        stderr.write(
+            "*** CONFLICT ***\n"
+            "these paths appear on both the left-hand side and right-hand \n"
+            "side of the proposed changes, which is not yet supported:\n"
+        )
+        for conflict_path in conflict_paths:
+            print(f"- {conflict_path}")
+        exit(1)
     if not yes:
         if not isatty(stdin.fileno()) or no:
             print(
@@ -169,10 +191,10 @@ def main(
             if apply_answer != "Y":
                 return
             yes = True
-            for change in changes:
-                print(to_term_str(change))
-                change.apply_to_fs()
     if yes:
+        print("applying changes...")
+        for change in changes:
+            change.apply_to_fs()
         print("all done")
 
 
