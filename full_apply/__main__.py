@@ -88,13 +88,18 @@ def collect_changes_recur(
             if recursive:
                 for subpath in path.iterdir():
                     changes += collect_changes_recur(
-                        cmd, [subpath], hidden, processed_paths
+                        cmd,
+                        [subpath],
+                        hidden,
+                        processed_paths,
+                        recursive=recursive,
                     )
             else:
                 # TODO this is a horrible solution, but proper dir handling
                 #      will require complete restructure anyway...
-                dir_change = cast(PathChange, changes[-1])
-                dir_change.recursion_skipped = True
+                if changes:
+                    dir_change = cast(PathChange, changes[-1])
+                    dir_change.recursion_skipped = True
         processed_paths.add(path)
     return changes
 
