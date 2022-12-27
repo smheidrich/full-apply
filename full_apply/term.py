@@ -72,6 +72,11 @@ def _(obj: PathChange) -> str:
         + chalk.bold("→")
         + f" {obj.new}"
     )
+    if obj.recursion_skipped:
+        s += (
+            chalk.grey("\ninfo:")
+            + " skipping contents because recursion was not requested"
+        )
     if obj.old_is_dir:
         s += chalk.red("\nattn:") + " will be ignored (dirs not yet supported)"
     if obj.replace_cmd_stderr:

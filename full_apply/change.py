@@ -18,12 +18,14 @@ class PathChange(Change):
         dest_exists: bool,
         old_is_dir: bool,
         replace_cmd_stderr: bytes,
+        recursion_skipped: bool = False,
     ):
         self.old = old
         self.new = new
         self.dest_exists = dest_exists
         self.old_is_dir = old_is_dir
         self.replace_cmd_stderr = replace_cmd_stderr
+        self.recursion_skipped = recursion_skipped
 
     def apply_to_fs(self, overwrite: bool = False):
         if self.old_is_dir or self.old.is_dir():
