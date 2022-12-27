@@ -3,7 +3,7 @@ from os import isatty
 from pathlib import Path
 from subprocess import CalledProcessError, run
 from sys import stderr, stdin
-from typing import MutableSequence, Sequence, Tuple
+from typing import MutableSequence, Sequence, Tuple, cast
 
 import typer
 from yachalk import chalk
@@ -68,7 +68,11 @@ def collect_changes_to_path_and_content(
 
 
 def collect_changes_recur(
-    cmd: str, paths: Sequence[Path], hidden: bool = False, processed_paths=None
+    cmd: str,
+    paths: Sequence[Path],
+    hidden: bool = False,
+    processed_paths=None,
+    recursive: bool = False,
 ) -> Sequence[Change]:
     # avoid processing paths twice:
     if processed_paths is None:
@@ -81,10 +85,16 @@ def collect_changes_recur(
             continue
         changes += collect_changes_to_path_and_content(cmd, path)
         if path.is_dir():
-            for subpath in path.iterdir():
-                changes += collect_changes_recur(
-                    cmd, [subpath], hidden, processed_paths
-                )
+            if recursive:
+                for subpath in path.iterdir():
+                    changes += collect_changes_recur(
+                        cmd, [subpath], hidden, processed_paths
+                    )
+            else:
+                # TODO this is a horrible solution, but proper dir handling
+                #      will require complete restructure anyway...
+                dir_change = cast(PathChange, changes[-1])
+                dir_change.recursion_skipped = True
         processed_paths.add(path)
     return changes
 
@@ -99,13 +109,22 @@ def main(
         ..., help="paths to apply to (recursively)"
     ),
     yes: bool = typer.Option(
-        False, help="apply changes without asking (dangerous!)"
+        False, "--yes", "-y", help="apply changes without asking (dangerous!)"
     ),
     no: bool = typer.Option(
-        False, help="don't ask whether to apply changes, just don't apply them"
+        False,
+        "--no",
+        "-n",
+        help="don't apply changes and don't even ask",
     ),
     hidden: bool = typer.Option(
-        False, help='whether to go through "hidden" (dot-prefixed) files'
+        False,
+        "--hidden",
+        "-H",
+        help='go through "hidden" (dot-prefixed) files',
+    ),
+    recursive: bool = typer.Option(
+        False, "--recursive", "-r", help="recurse into directories"
     ),
 ):
     """
@@ -124,7 +143,7 @@ def main(
     if yes and no:
         raise typer.BadParameter("can't use both --yes and --no")
     changes = collect_changes_recur(
-        cmd, [Path(path) for path in paths], hidden
+        cmd, [Path(path) for path in paths], hidden, recursive=recursive
     )
     if not changes:
         print("no changes to be made")
