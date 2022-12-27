@@ -110,10 +110,8 @@ app = typer.Typer()
 @app.command()
 def main(
     cmd: str = typer.Argument(..., help="shell command to apply"),
-    # NOTE that None here means empty list (which makes no sense)... see:
-    # https://github.com/tiangolo/typer/issues/108#issuecomment-642837790
     paths: list[str] = typer.Argument(
-        None, help="paths to apply to (recursively)"
+        ..., help="paths to apply to (recursively)"
     ),
     yes: bool = typer.Option(
         False, "--yes", "-y", help="apply changes without asking (dangerous!)"
@@ -148,8 +146,6 @@ def main(
 
       $ full-apply -r "sed s/foo/bar/g" .
     """
-    if not paths:
-        paths = ["."]
     if yes and no:
         raise typer.BadParameter("can't use both --yes and --no")
     changes = collect_changes_recur(
