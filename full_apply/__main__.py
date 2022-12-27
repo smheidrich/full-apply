@@ -136,9 +136,10 @@ def main(
     Examples:
 
     Replace all occurrences of "foo" with "bar" in both paths and file
-    contents within the current directory and sub-directories:
+    contents within the current directory and sub-directories (will prompt for
+    confirmation before actually making any changes):
 
-      $ full-apply "sed s/foo/bar/g" .
+      $ full-apply -r "sed s/foo/bar/g" .
     """
     if yes and no:
         raise typer.BadParameter("can't use both --yes and --no")
