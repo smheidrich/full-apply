@@ -1,3 +1,5 @@
+# TODO for this whole file: handle non-UTF-8 text encodings
+from collections.abc import Iterator
 from difflib import diff_bytes, unified_diff
 from functools import singledispatch
 
@@ -90,6 +92,19 @@ def _(obj: PathChange) -> str:
     return s.rstrip("\n")
 
 
+def format_content_diff(content_diff: Iterator[bytes]) -> str:
+    # skip first 2 lines which are just +++ ---
+    next(content_diff)
+    next(content_diff)
+    try:
+        s = ""
+        for diff_line in content_diff:
+            s += "        " + color_diff_line(diff_line.decode("utf-8"))
+        return s
+    except UnicodeDecodeError:
+        return "        " + chalk.grey("diff of non-UTF-8 file not shown")
+
+
 @to_term_str.register
 def _(obj: ContentChange) -> str:
     content_diff = diff_bytes(
@@ -100,11 +115,7 @@ def _(obj: ContentChange) -> str:
         tofile=b"new",
     )
     s = chalk.bold.yellow("patch ") + f"{obj.path}:\n"
-    # skip first 2 lines which are just +++ ---
-    next(content_diff)
-    next(content_diff)
-    for diff_line in content_diff:
-        s += "        " + color_diff_line(diff_line.decode("utf-8"))
+    s += format_content_diff(content_diff)
     if obj.replace_cmd_stderr:
         s += chalk.grey("note: ") + "".join(
             prefix_lines(

@@ -35,6 +35,7 @@ Options:
   -y, --yes        apply changes without asking (dangerous!)
   -n, --no         don't apply changes and don't even ask
   -H, --hidden     go through "hidden" (dot-prefixed) files
+  --binary         go through the contents of binary files
   -r, --recursive  recurse into directories
   --help           Show this message and exit.
 ```
