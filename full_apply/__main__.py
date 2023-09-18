@@ -6,6 +6,9 @@ from sys import stderr, stdin
 from typing import Iterable, MutableSequence, Sequence, Tuple, cast
 
 import typer
+
+# TODO: https://github.com/binaryornot/binaryornot/issues/626
+from binaryornot.check import is_binary  # type: ignore
 from yachalk import chalk
 
 from .change import Change, ContentChange, PathChange
@@ -32,11 +35,13 @@ def run_replace_cmd(cmd: str, buf: bytes) -> Tuple[bytes, bytes]:
 
 
 def collect_changes_to_path_and_content(
-    cmd: str, path: Path
+    cmd: str,
+    path: Path,
+    binary: bool,
 ) -> Sequence[Change]:
     changes: MutableSequence[Change] = []
     # apply to contents
-    if path.is_file():
+    if path.is_file() and (binary or not is_binary(path)):
         content_bytes = path.read_bytes()
         new_content_bytes, replace_cmd_stderr = run_replace_cmd(
             cmd, content_bytes
@@ -71,6 +76,7 @@ def collect_changes_recur(
     cmd: str,
     paths: Sequence[Path],
     hidden: bool = False,
+    binary: bool = False,
     processed_paths=None,
     recursive: bool = False,
 ) -> Sequence[Change]:
@@ -83,7 +89,7 @@ def collect_changes_recur(
             path.name.startswith(".") and not hidden
         ):
             continue
-        changes += collect_changes_to_path_and_content(cmd, path)
+        changes += collect_changes_to_path_and_content(cmd, path, binary)
         if path.is_dir():
             if recursive:
                 for subpath in path.iterdir():
@@ -91,6 +97,7 @@ def collect_changes_recur(
                         cmd,
                         [subpath],
                         hidden,
+                        binary,
                         processed_paths,
                         recursive=recursive,
                     )
@@ -142,6 +149,11 @@ def main(
         "-H",
         help='go through "hidden" (dot-prefixed) files',
     ),
+    binary: bool = typer.Option(
+        False,
+        "--binary",
+        help="go through the contents of binary files",
+    ),
     recursive: bool = typer.Option(
         False, "--recursive", "-r", help="recurse into directories"
     ),
@@ -163,7 +175,11 @@ def main(
     if yes and no:
         raise typer.BadParameter("can't use both --yes and --no")
     changes = collect_changes_recur(
-        cmd, [Path(path) for path in paths], hidden, recursive=recursive
+        cmd,
+        [Path(path) for path in paths],
+        hidden,
+        binary,
+        recursive=recursive,
     )
     if not changes:
         print("no changes to be made")
