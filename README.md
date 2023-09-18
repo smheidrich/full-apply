@@ -39,3 +39,11 @@ Options:
   -r, --recursive  recurse into directories
   --help           Show this message and exit.
 ```
+
+## Changelog
+
+### 0.7.0
+
+- Now defaults to not going through the contents of binary files.
+- Introduced `--binary` option to re-enable the old behavior of doing so.
+- Fixed crash on diff output for files with non-UTF-8 contents.
