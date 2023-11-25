@@ -41,7 +41,7 @@ def collect_changes_to_path_and_content(
 ) -> Sequence[Change]:
     changes: MutableSequence[Change] = []
     # apply to contents
-    if path.is_file() and (binary or not is_binary(path)):
+    if path.is_file() and (binary or not is_binary(str(path))):
         content_bytes = path.read_bytes()
         new_content_bytes, replace_cmd_stderr = run_replace_cmd(
             cmd, content_bytes
