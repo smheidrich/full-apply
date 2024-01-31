@@ -49,5 +49,6 @@ publish package:
   needs:
     - job: build package
   script:
+    - pip install twine
     - twine check dist/*
     - twine upload dist/*
