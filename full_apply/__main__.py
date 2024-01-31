@@ -38,6 +38,7 @@ def collect_changes_to_path_and_content(
     cmd: str,
     path: Path,
     binary: bool,
+    move: bool,
 ) -> Sequence[Change]:
     changes: MutableSequence[Change] = []
     # apply to contents
@@ -52,23 +53,24 @@ def collect_changes_to_path_and_content(
                     path, content_bytes, new_content_bytes, replace_cmd_stderr
                 )
             )
-    # apply to path
-    path_str = str(path)
-    new_path_bytes, replace_cmd_stderr = run_replace_cmd(
-        cmd, path_str.encode("utf-8")
-    )
-    new_path_str = new_path_bytes.decode("utf-8")
-    new_path = Path(new_path_str)
-    if new_path_str != path_str:
-        changes.append(
-            PathChange(
-                path,
-                new_path,
-                new_path.exists(),
-                path.is_dir(),
-                replace_cmd_stderr,
-            )
+    # apply to path (skipped if `move` is False)
+    if move:
+        path_str = str(path)
+        new_path_bytes, replace_cmd_stderr = run_replace_cmd(
+            cmd, path_str.encode("utf-8")
         )
+        new_path_str = new_path_bytes.decode("utf-8")
+        new_path = Path(new_path_str)
+        if new_path_str != path_str:
+            changes.append(
+                PathChange(
+                    path,
+                    new_path,
+                    new_path.exists(),
+                    path.is_dir(),
+                    replace_cmd_stderr,
+                )
+            )
     return changes
 
 
@@ -79,6 +81,7 @@ def collect_changes_recur(
     binary: bool = False,
     processed_paths=None,
     recursive: bool = False,
+    move: bool = True,
 ) -> Sequence[Change]:
     # avoid processing paths twice:
     if processed_paths is None:
@@ -89,7 +92,7 @@ def collect_changes_recur(
             path.name.startswith(".") and not hidden
         ):
             continue
-        changes += collect_changes_to_path_and_content(cmd, path, binary)
+        changes += collect_changes_to_path_and_content(cmd, path, binary, move)
         if path.is_dir():
             if recursive:
                 for subpath in path.iterdir():
@@ -100,6 +103,7 @@ def collect_changes_recur(
                         binary,
                         processed_paths,
                         recursive=recursive,
+                        move=move,
                     )
             else:
                 # TODO this is a horrible solution, but proper dir handling
@@ -157,6 +161,7 @@ def main(
     recursive: bool = typer.Option(
         False, "--recursive", "-r", help="recurse into directories"
     ),
+    move: bool = typer.Option(True, help="move files"),
 ):
     """
     Apply commands to both file contents and paths.
@@ -180,6 +185,7 @@ def main(
         hidden,
         binary,
         recursive=recursive,
+        move=move,
     )
     if not changes:
         print("no changes to be made")
