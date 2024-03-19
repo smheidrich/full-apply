@@ -14,12 +14,12 @@ def prefix_line(obj, prefix: str | bytes = ""):
 
 
 @prefix_line.register
-def _(obj: str, prefix: str = "") -> None:
+def _(obj: str, prefix: str = "") -> str:
     return f"{prefix}{obj}"
 
 
 @prefix_line.register
-def _(obj: bytes, prefix: bytes = b""):
+def _(obj: bytes, prefix: bytes = b"") -> bytes:
     return prefix + obj
 
 
