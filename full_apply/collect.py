@@ -5,7 +5,7 @@ from sys import stderr
 from typing import Iterable, MutableSequence, Sequence, Tuple, cast
 
 # TODO: https://github.com/binaryornot/binaryornot/issues/626
-from binaryornot.check import is_binary
+from binaryornot.check import is_binary  # type: ignore
 
 from .change import Change, ContentChange, PathChange
 
