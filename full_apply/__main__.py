@@ -42,7 +42,7 @@ def main(
         False, "--recursive", "-r", help="recurse into directories"
     ),
     move: bool = typer.Option(True, help="move files"),
-):
+) -> None:
     """
     Apply commands to both file contents and paths.
 
@@ -100,7 +100,7 @@ def main(
         print("all done")
 
 
-def cli_main():
+def cli_main() -> None:
     typer.run(main)
 
 

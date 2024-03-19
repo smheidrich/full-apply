@@ -9,12 +9,12 @@ from .change import ContentChange, PathChange
 
 
 @singledispatch
-def prefix_line(obj, prefix=""):
+def prefix_line(obj, prefix: str | bytes = ""):
     raise NotImplementedError(f"no prefix_line impl for type '{type(obj)}'")
 
 
 @prefix_line.register
-def _(obj: str, prefix: str = ""):
+def _(obj: str, prefix: str = "") -> None:
     return f"{prefix}{obj}"
 
 

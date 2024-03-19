@@ -6,7 +6,7 @@ class Change(ABC):
     replace_cmd_stderr: bytes
 
     @abstractmethod
-    def apply_to_fs(self):
+    def apply_to_fs(self) -> None:
         ...
 
 
@@ -27,7 +27,7 @@ class PathChange(Change):
         self.replace_cmd_stderr = replace_cmd_stderr
         self.recursion_skipped = recursion_skipped
 
-    def apply_to_fs(self, overwrite: bool = False):
+    def apply_to_fs(self, overwrite: bool = False) -> None:
         if self.old_is_dir or self.old.is_dir():
             print("directories not supported yet, skipping...")
             return
@@ -54,6 +54,6 @@ class ContentChange(Change):
         self.new = new
         self.replace_cmd_stderr = replace_cmd_stderr
 
-    def apply_to_fs(self):
+    def apply_to_fs(self) -> None:
         print(f"writing to {self.path}")
         self.path.write_bytes(self.new)

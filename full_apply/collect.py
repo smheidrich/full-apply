@@ -5,7 +5,7 @@ from sys import stderr
 from typing import Iterable, MutableSequence, Sequence, Tuple, cast
 
 # TODO: https://github.com/binaryornot/binaryornot/issues/626
-from binaryornot.check import is_binary  # type: ignore
+from binaryornot.check import is_binary
 
 from .change import Change, ContentChange, PathChange
 
@@ -74,7 +74,7 @@ def collect_changes_recur(
     paths: Sequence[Path],
     hidden: bool = False,
     binary: bool = False,
-    processed_paths=None,
+    processed_paths: set[Path] | None = None,
     recursive: bool = False,
     move: bool = True,
 ) -> Sequence[Change]:
